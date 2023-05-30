@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garage Management System</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Garage Management System</h1>
+  </header>
+
+  <div id="car-form">
+    <div class="form-row">
+      <label for="brand">Brand:</label>
+      <input id="brand" class="input-field" type="text">
+    </div>
+    <div class="form-row">
+      <label for="model">Model:</label>
+      <input id="model" class="input-field" type="text">
+    </div>
+    <div class="form-row">
+      <label for="color">Color:</label>
+      <input id="color" class="input-field" type="text">
+    </div>
+    <div class="form-row">
+      <label for="owner">Owner:</label>
+      <input id="owner" class="input-field" type="text">
+    </div>
+    <button onclick="addCar()" class="add-button">Add New Car</button>
+  </div>
+
+  <table id="car-table">
+    <thead>
+      <tr>
+        <th>Brand</th>
+        <th>Model</th>
+        <th>Color</th>
+        <th>Owner</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="car-data"></tbody>
+  </table>
+
+  <div id="message"></div>
+
+  <script>
+    const MY_SERVER = 'http://127.0.0.1:5000';
+
+    // Add new car
+    const addCar = async () => {
+      const brand = document.getElementById("brand").value;
+      const model = document.getElementById("model").value;
+      const color = document.getElementById("color").value;
+      const owner = document.getElementById("owner").value;
+
+      const data = {
+        brand: brand,
+        model: model,
+        color: color,
+        owner: owner
+      };
+
+      try {
+        await axios.post(`${MY_SERVER}/new`, data);
+        showCars();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    // Delete car
+    const deleteCar = async (carId) => {
+      try {
+        const response = await axios.delete(`${MY_SERVER}/delete/${carId}`);
+        const message = response.data;
+        document.getElementById("message").textContent = message;
+        showCars();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    // Update car
+    const updateCar = async (carId) => {
+      const brand = document.getElementById(`brand-${carId}`).value;
+      const model = document.getElementById(`model-${carId}`).value;
+      const color = document.getElementById(`color-${carId}`).value;
+      const owner = document.getElementById(`owner-${carId}`).value;
+
+      const data = {
+    brand: brand,
+    model: model,
+    color: color,
+    owner: owner
+  };
+
+  try {
+    await axios.put(`${MY_SERVER}/update/${carId}`, data);
+    showCars(); // Refresh the car data after update
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// Show all cars (all-time)
+const showCars = async () => {
+  try {
+    const response = await axios.get(MY_SERVER);
+    const cars = response.data;
+    const carData = cars
+      .map(
+        car => `
+          <tr>
+            <td><input id="brand-${car.id}" value="${car.brand}"></td>
+            <td><input id="model-${car.id}" value="${car.model}"></td>
+            <td><input id="color-${car.id}" value="${car.color}"></td>
+            <td><input id="owner-${car.id}" value="${car.owner}"></td>
+            <td>
+              <button onclick="updateCar('${car.id}')">Update</button>
+              <button onclick="deleteCar('${car.id}')">Delete</button>
+            </td>
+          </tr>
+        `
+      )
+      .join("");
+    document.getElementById("car-data").innerHTML = carData;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// Call showCars to display initial car data
+showCars();
+</script>
+</body>
+</html>
